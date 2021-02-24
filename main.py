@@ -3,7 +3,7 @@ from tkinter import filedialog
 from tkinter.ttk import *
 from mutagen.mp3 import MP3
 import time
-import tkinter.ttk as ttk
+from tkinter import messagebox
 
 import pygame
 
@@ -31,19 +31,54 @@ def add_song():
 def play_song():
     global stopped
     stopped = False
+    try:
+        if stopped:
+            return
 
-    if stopped:
-        return
+        global paused
+        global playing
 
-    song = songBox.get(ACTIVE)
-    song = f'C:/Users/Sara Said/PycharmProjects/MMSMusicPlayer/audio/{song}.mp3'
-    pygame.mixer.music.load(song)
-    pygame.mixer.music.play()
+        if not playing:
+            song = songBox.get(ACTIVE)
+            song = f'C:/Users/Sara Said/PycharmProjects/MMSMusicPlayer/audio/{song}.mp3'
+            pygame.mixer.music.load(song)
+            pygame.mixer.music.play()
 
-    play_time()
+            play_button['image'] = pauseBtnImg
+            playing = True
+            play_time()
 
-    slider_position = int(song_length)
-    my_slider.config(to=slider_position, value=0)
+            slider_position = int(song_length)
+            my_slider.config(to=slider_position, value=0)
+            print(paused)
+
+        else:
+            if paused:
+                pygame.mixer.music.unpause()
+                paused = False
+                play_button['image'] = pauseBtnImg
+                print(paused)
+
+            else:
+                pygame.mixer.music.pause()
+                paused = True
+                play_button['image'] = playBtnImg
+                print(paused)
+    except:
+        messagebox.showerror('Error', 'No file found to play.')
+
+
+##Pause song
+def pause_song(is_paused):
+    global paused
+    paused = is_paused
+
+    if paused:
+        pygame.mixer.music.unpause()
+        paused = False
+    else:
+        pygame.mixer.music.pause()
+        paused = True
 
 
 global stopped
@@ -66,19 +101,6 @@ def stop_song():
 
 global paused
 paused = False
-
-
-##Pause song
-def pause_song(is_paused):
-    global paused
-    paused = is_paused
-
-    if paused:
-        pygame.mixer.music.unpause()
-        paused = False
-    else:
-        pygame.mixer.music.pause()
-        paused = True
 
 
 def next_song():
@@ -177,6 +199,7 @@ def play_time():
 
     if int(my_slider.get()) == int(song_length):
         timeLabel.config(text=f'Time Elapsed: {convert_song_length} of {convert_song_length} ')
+        next_song()
 
     elif paused:
         pass
@@ -206,7 +229,7 @@ def slide(x):
     pygame.mixer.music.play(start=int(my_slider.get()))
 
 
-def volume(x):
+def volume(val):
     pygame.mixer.music.set_volume(volume_slider.get())
 
 
@@ -223,7 +246,7 @@ def unmute():
 root = Tk()
 root.title('MMS Music Player')
 root.iconbitmap('images/Music.ico')
-root.geometry('800x500')
+root.geometry('600x500')
 root.resizable(0, 0)
 
 ## Create Master Frame
