@@ -1,11 +1,15 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter.ttk import *
+import tkinter as tk
+
 from mutagen.mp3 import MP3
 import time
 from tkinter import messagebox
-
 import pygame
+
+from moviepy.editor import *
+from glob import glob
 
 pygame.mixer.init()
 
@@ -27,51 +31,42 @@ def add_song():
         songBox.insert(END, song)
 
 
+def play_video():
+    movie = filedialog.askopenfilename(initialdir='audio/', title='Choose a video', filetypes=(("Mp4 Files", "*.mp4"),))
+
+    pygame.display.set_caption('Stay Safe .. Stay Home')
+    clip = VideoFileClip(movie)
+    clip.preview()
+    pygame.quit()
+
+global playing
+playing = False
+
+
 ##Play Song Function
 def play_song():
-    global stopped
-    stopped = False
     try:
+        global stopped
+        stopped = False
+
         if stopped:
             return
 
-        global paused
-        global playing
+        song = songBox.get(ACTIVE)
+        song = f'C:/Users/Sara Said/PycharmProjects/MMSMusicPlayer/audio/{song}.mp3'
+        pygame.mixer.music.load(song)
+        pygame.mixer.music.play()
 
-        if not playing:
-            song = songBox.get(ACTIVE)
-            song = f'C:/Users/Sara Said/PycharmProjects/MMSMusicPlayer/audio/{song}.mp3'
-            pygame.mixer.music.load(song)
-            pygame.mixer.music.play()
+        play_time()
 
-            play_button['image'] = pauseBtnImg
-            playing = True
-            play_time()
-
-            slider_position = int(song_length)
-            my_slider.config(to=slider_position, value=0)
-            print(paused)
-
-        else:
-            if paused:
-                pygame.mixer.music.unpause()
-                paused = False
-                play_button['image'] = pauseBtnImg
-                print(paused)
-
-            else:
-                pygame.mixer.music.pause()
-                paused = True
-                play_button['image'] = playBtnImg
-                print(paused)
+        slider_position = int(song_length)
+        my_slider.config(to=slider_position, value=0)
     except:
-        messagebox.showerror('Error', 'No file found to play.')
-
+        messagebox.showinfo('Error', 'PlayList is Empty Add some songs')
 
 ##Pause song
-def pause_song(is_paused):
+def pause_song():
     global paused
-    paused = is_paused
 
     if paused:
         pygame.mixer.music.unpause()
@@ -79,6 +74,8 @@ def pause_song(is_paused):
     else:
         pygame.mixer.music.pause()
         paused = True
+
+    print(paused)
 
 
 global stopped
@@ -280,8 +277,11 @@ ummuteButton = Button(volumeframe, image=unmuteImg, command=unmute).grid(row=2, 
 volume_slider = Scale(volumeframe, from_=0, to=1, orient=VERTICAL, value=1, command=volume, length=80)
 volume_slider.grid(row=1, column=0, pady=10)
 
+##Add mp4 to PlayList
+x = tk.StringVar(value=[m for m in glob("*.mp4")])
+
 ##List box
-songBox = Listbox(topframe, width=50, bg='grey', fg='green', selectbackground='white', selectforeground='black')
+songBox = Listbox(topframe, width=50, bg='grey', fg='green', selectbackground='white', selectforeground='black', listvariable=x)
 songBox.grid(row=0, column=0, pady=20)
 
 ##Song Duration Label
@@ -304,17 +304,11 @@ forwardBtnImg = PhotoImage(file='images/next.png')
 pauseBtnImg = PhotoImage(file='images/pause.png')
 
 ##Create Player Control Buttons
-pause_button = Button(controlFrame, image=pauseBtnImg, command=lambda: pause_song(paused)).grid(row=0, column=2)
+pause_button = Button(controlFrame, image=pauseBtnImg, command=pause_song).grid(row=0, column=2)
 play_button = Button(controlFrame, image=playBtnImg, command=play_song).grid(row=0, column=1)
 prev_button = Button(controlFrame, image=backBtnImg, command=previous_song).grid(row=0, column=0)
 stop_button = Button(controlFrame, image=stopBtnImg, command=stop_song).grid(row=0, column=3)
 next_button = Button(controlFrame, image=forwardBtnImg, command=next_song).grid(row=0, column=4)
-#
-# addToList = Button(root, text='Add to list', command=add_song).place(x=670, y=10)
-#
-# delete_song = Button(root, text='Remove a song', command=delete_song).place(x=670, y=40)
-#
-# delete_all_songs = Button(root, text='Remove all songs', command=delete_all_songs).place(x=670, y=70)
 
 
 addToList = Button(buttonFrame, text='Add to list', command=add_song).grid(row=0, column=0)
@@ -322,5 +316,7 @@ addToList = Button(buttonFrame, text='Add to list', command=add_song).grid(row=0
 delete_song = Button(buttonFrame, text='Remove a song', command=delete_song).grid(row=0, column=1)
 
 delete_all_songs = Button(buttonFrame, text='Remove all songs', command=delete_all_songs).grid(row=0, column=2)
+
+play_video_button = Button(buttonFrame, text='Play Video', command=play_video).grid(row=0, column=3)
 
 root.mainloop()
